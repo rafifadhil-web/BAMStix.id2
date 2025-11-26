@@ -1,0 +1,3084 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3A7BCE">
+    <title>BAMStix.id - Pemesanan Tiket Online</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <link rel="manifest" href="#" id="manifest-placeholder">
+    
+    <style>
+        :root {
+            --primary: #3A7BCE;
+            --secondary: #FFFFFF;
+            --dark: #1E1E1E;
+            --grey: #333333;
+            --light-grey: #F2F5FA;
+            --soft-blue: #E8EEF7;
+            --success: #2ECC71;
+            --warning: #F1C40F;
+            --danger: #E74C3C;
+        }
+
+        body.dark-mode {
+            --secondary: #0D1117;
+            --dark: #EDEDED;
+            --light-grey: #161B22;
+            --grey: #EDEDED;
+            background-color: #0D1117;
+            color: #EDEDED;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Poppins', 'Roboto', sans-serif;
+            background-color: var(--secondary);
+            color: var(--dark);
+            transition: all 0.3s ease;
+        }
+
+        /* Loading Animation */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .page-loader.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--light-grey);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: var(--secondary);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .top-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .top-icons i {
+            font-size: 24px;
+            color: var(--grey);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .top-icons i:hover {
+            color: var(--primary);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100%;
+            background: var(--secondary);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            transition: left 0.25s ease;
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+            z-index: 1999;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .sidebar .search-bar {
+            margin: 20px 0;
+        }
+
+        .sidebar .menu-item {
+            padding: 15px;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 18px;
+        }
+
+        .sidebar .menu-item:hover {
+            background: var(--soft-blue);
+        }
+
+        .sidebar .menu-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Container */
+        .main-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Cards */
+        .card-custom {
+            background: var(--secondary);
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .card-custom:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* History Section */
+        .history-section {
+            background: var(--light-grey);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+        }
+
+        .history-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .qr-mini {
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .qr-mini canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Icon Bar */
+        .icon-bar {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+            padding: 15px;
+            background: var(--light-grey);
+            border-radius: 16px;
+        }
+
+        .icon-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .icon-item:hover {
+            background: var(--soft-blue);
+        }
+
+        .icon-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .icon-item i {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 5px;
+            color: var(--grey);
+        }
+
+        .icon-item.active i {
+            color: white;
+        }
+
+        .icon-item span {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Carousel */
+        .carousel-section {
+            margin: 25px 0;
+        }
+
+        .carousel-section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .carousel-inner img {
+            border-radius: 16px;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        /* Event Card */
+        .event-card {
+            cursor: pointer;
+        }
+
+        .event-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 16px 16px 0 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .event-card img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Image Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            animation: fadeIn 0.3s;
+        }
+
+        .image-modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            animation: zoomIn 0.3s;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .image-modal-close:hover {
+            color: #bbb;
+        }
+
+        .image-modal-caption {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .event-card-body {
+            padding: 15px;
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .event-price {
+            color: var(--primary);
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .event-info {
+            font-size: 14px;
+            color: var(--grey);
+            margin: 5px 0;
+        }
+
+        .event-info i {
+            margin-right: 5px;
+        }
+
+        /* Button */
+        .btn-primary-custom {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            height: 46px;
+        }
+
+        .btn-primary-custom:hover {
+            background: #2E5FA0;
+            transform: translateY(-2px);
+        }
+
+        /* Toast */
+        .toast-custom {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 3000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast-custom.success {
+            background: var(--success);
+        }
+
+        .toast-custom.error {
+            background: var(--danger);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 16px;
+            background: var(--secondary);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--light-grey);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--light-grey);
+        }
+
+        /* QR Code */
+        .qr-container {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .qr-container canvas {
+            margin: 20px auto;
+        }
+
+        /* Cart Badge */
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Quantity Control */
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .qty-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-value {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .history-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .carousel-inner img {
+                height: 200px;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.15s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: none;
+            background: var(--light-grey);
+            font-size: 14px;
+        }
+
+        .badge-trending {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--warning);
+            color: var(--dark);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .timer-countdown {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .success-screen {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .success-screen i {
+            font-size: 100px;
+            color: var(--success);
+            margin-bottom: 20px;
+        }
+
+        .success-screen h1 {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-arrow-left me-3" id="backButton" onclick="goBack()" style="font-size: 24px; cursor: pointer; display: none;"></i>
+            <div class="logo">BAMStix.id</div>
+        </div>
+        <div class="top-icons">
+            <i class="bi bi-search" onclick="showSearchModal()"></i>
+            <div style="position: relative;">
+                <i class="bi bi-cart3" onclick="showCart()"></i>
+                <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+            </div>
+            <i class="bi bi-moon-fill" id="darkModeToggle" onclick="toggleDarkMode()"></i>
+            <i class="bi bi-list" onclick="toggleSidebar()"></i>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="logo mb-4">BAMStix.id</div>
+        <div class="search-bar">
+            <input type="text" placeholder="Cari event..." id="sidebarSearch" oninput="searchFromSidebar()">
+        </div>
+        <div class="menu-item" onclick="showPage('home')">
+            <i class="bi bi-house-door"></i> Beranda
+        </div>
+        <div class="menu-item" onclick="filterByCategory('konser')">
+            <i class="bi bi-music-note-beamed"></i> Konser
+        </div>
+        <div class="menu-item" onclick="filterByCategory('olahraga')">
+            <i class="bi bi-trophy"></i> Olahraga
+        </div>
+        <div class="menu-item" onclick="filterByCategory('seminar')">
+            <i class="bi bi-megaphone"></i> Seminar
+        </div>
+        <div class="menu-item" onclick="filterByCategory('kesenian')">
+            <i class="bi bi-palette"></i> Kesenian
+        </div>
+        <div class="menu-item" onclick="showMyTickets()">
+            <i class="bi bi-ticket-perforated"></i> Tiket Saya
+        </div>
+        <div class="menu-item" onclick="showProfile()">
+            <i class="bi bi-person-circle"></i> Profil Saya
+        </div>
+        <div class="menu-item" onclick="showQRScanner()">
+            <i class="bi bi-qr-code-scan"></i> Scan QR
+        </div>
+        <div class="menu-item" onclick="showCustomerSupport()">
+            <i class="bi bi-headset"></i> Customer Support
+        </div>
+        <div class="menu-item" onclick="showAdminPanel()">
+            <i class="bi bi-gear"></i> Admin Panel
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container fade-in" id="mainContainer">
+        <!-- Content will be dynamically loaded here -->
+    </div>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="image-modal-content" id="modalImage">
+        <div class="image-modal-caption" id="modalCaption"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ===== DATA MANAGEMENT =====
+        const DB = {
+            events: 'bamstix_events',
+            cart: 'bamstix_cart',
+            orders: 'bamstix_orders',
+            tickets: 'bamstix_tickets',
+            settings: 'bamstix_settings',
+            profile: 'bamstix_profile'
+        };
+
+        // Page History for Back Button
+        let pageHistory = [];
+
+        // Initialize LocalStorage
+        function initStorage() {
+            if (!localStorage.getItem(DB.events)) {
+                const sampleEvents = [
+                    // KONSER - 10 events
+                    {
+                        id: '1',
+                        title: 'Konser Raisa Live 2024',
+                        category: 'konser',
+                        price: 250000,
+                        date: '2024-12-25',
+                        time: '19:00',
+                        location: 'Jakarta Convention Center',
+                        description: 'Konser spektakuler Raisa dengan hits terbarunya',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Konser+Raisa',
+                        trending: true
+                    },
+                    {
+                        id: '2',
+                        title: 'Tulus Manusia Tour',
+                        category: 'konser',
+                        price: 300000,
+                        date: '2024-12-28',
+                        time: '19:30',
+                        location: 'ICE BSD',
+                        description: 'Tulus menggelar konser dengan konsep manusia',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Tulus+Tour',
+                        trending: true
+                    },
+                    {
+                        id: '3',
+                        title: 'Dewa 19 Reunion Concert',
+                        category: 'konser',
+                        price: 350000,
+                        date: '2025-01-05',
+                        time: '18:00',
+                        location: 'Gelora Bung Karno',
+                        description: 'Reuni legendaris Dewa 19 dengan formasi asli',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Dewa+19',
+                        trending: false
+                    },
+                    {
+                        id: '4',
+                        title: 'Isyana Sarasvati Live',
+                        category: 'konser',
+                        price: 200000,
+                        date: '2025-01-10',
+                        time: '19:00',
+                        location: 'The Kasablanka Hall',
+                        description: 'Pertunjukan vokal spektakuler dari Isyana',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Isyana',
+                        trending: false
+                    },
+                    {
+                        id: '5',
+                        title: 'Payung Teduh Akustik',
+                        category: 'konser',
+                        price: 180000,
+                        date: '2025-01-15',
+                        time: '20:00',
+                        location: 'Balai Sarbini',
+                        description: 'Konser akustik intimate dengan Payung Teduh',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Payung+Teduh',
+                        trending: false
+                    },
+                    {
+                        id: '6',
+                        title: 'RAN Comeback Show',
+                        category: 'konser',
+                        price: 220000,
+                        date: '2025-01-20',
+                        time: '19:00',
+                        location: 'Ciputra Artpreneur',
+                        description: 'RAN kembali dengan album dan lagu-lagu baru',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=RAN+Show',
+                        trending: false
+                    },
+                    {
+                        id: '7',
+                        title: 'Sheila on 7 - Anugerah Terindah',
+                        category: 'konser',
+                        price: 280000,
+                        date: '2025-01-25',
+                        time: '18:30',
+                        location: 'Tennis Indoor Senayan',
+                        description: 'Tour Anugerah Terindah dari Sheila on 7',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Sheila+on+7',
+                        trending: true
+                    },
+                    {
+                        id: '8',
+                        title: 'Glenn Fredly Tribute',
+                        category: 'konser',
+                        price: 150000,
+                        date: '2025-02-01',
+                        time: '19:00',
+                        location: 'Usmar Ismail Hall',
+                        description: 'Konser tribute mengenang Glenn Fredly',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Glenn+Tribute',
+                        trending: false
+                    },
+                    {
+                        id: '9',
+                        title: 'Mahalini Solo Concert',
+                        category: 'konser',
+                        price: 240000,
+                        date: '2025-02-05',
+                        time: '19:30',
+                        location: 'The Pallas',
+                        description: 'Konser solo pertama Mahalini',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Mahalini',
+                        trending: false
+                    },
+                    {
+                        id: '10',
+                        title: 'Juicy Luicy Live Performance',
+                        category: 'konser',
+                        price: 190000,
+                        date: '2025-02-10',
+                        time: '20:00',
+                        location: 'M Bloc Space',
+                        description: 'Juicy Luicy menghadirkan lagu-lagu hits mereka',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Juicy+Luicy',
+                        trending: false
+                    },
+                    {
+                        id: '41',
+                        title: 'Two Stroke Party 4th Annual 2025',
+                        category: 'konser',
+                        price: 0,
+                        date: '2025-12-07',
+                        time: '14:00',
+                        location: 'Lapangan Terbuka Solo',
+                        description: 'Pesta rakyat tahunan untuk pecinta motor dua tak',
+                        image: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=400&h=300&fit=crop',
+                        trending: true
+                    },
+                    {
+                        id: '42',
+                        title: 'Gigs Eksplosif',
+                        category: 'konser',
+                        price: 50000,
+                        date: '2025-11-19',
+                        time: '19:00',
+                        location: 'GOR Manahan Solo',
+                        description: 'Konser musik dengan band-band lokal terbaik',
+                        image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=400&h=300&fit=crop',
+                        trending: false
+                    },
+                    {
+                        id: '43',
+                        title: 'Lollipop Fest Vol. 1',
+                        category: 'konser',
+                        price: 94500,
+                        date: '2026-02-08',
+                        time: '15:00',
+                        location: 'The Park Mall Solo',
+                        description: 'Festival musik dengan tema manis dan penuh warna',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Lollipop+Fest',
+                        trending: false
+                    },
+                    {
+                        id: '44',
+                        title: 'Sarga Festival (Food & Music)',
+                        category: 'konser',
+                        price: 25000,
+                        date: '2025-04-20',
+                        time: '10:00',
+                        location: 'Taman Balekambang Solo',
+                        description: 'Festival kuliner dan musik lokal',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Sarga+Festival',
+                        trending: true
+                    },
+                    {
+                        id: '45',
+                        title: 'Hadir Fest Vol. 1',
+                        category: 'konser',
+                        price: 75000,
+                        date: '2025-11-15',
+                        time: '16:00',
+                        location: 'Stadion Manahan Solo',
+                        description: 'Festival musik dengan lineup band indie terbaik',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Hadir+Fest',
+                        trending: true
+                    },
+                    {
+                        id: '46',
+                        title: 'Royal Surakarta Wellness Festival',
+                        category: 'konser',
+                        price: 1500000,
+                        date: '2025-11-01',
+                        time: '08:00',
+                        location: 'Royal Surakarta Heritage',
+                        description: 'Festival kesehatan dan musik premium',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Wellness+Festival',
+                        trending: false
+                    },
+                    {
+                        id: '47',
+                        title: 'Hadir Fest Vol. 1 & Lokananta',
+                        category: 'konser',
+                        price: 75000,
+                        date: '2025-11-15',
+                        time: '16:00',
+                        location: 'Lokananta Solo',
+                        description: 'Kolaborasi Hadir Fest dengan Lokananta',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Hadir+x+Lokananta',
+                        trending: false
+                    },
+                    {
+                        id: '48',
+                        title: 'Maroon 5 Asia 2025 - Jakarta',
+                        category: 'konser',
+                        price: 6000000,
+                        date: '2025-02-01',
+                        time: '19:00',
+                        location: 'Gelora Bung Karno Jakarta',
+                        description: 'Konser Maroon 5 di Indonesia',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Maroon+5',
+                        trending: true
+                    },
+                    {
+                        id: '49',
+                        title: 'ArjunaFest Vol. 5',
+                        category: 'konser',
+                        price: 35000,
+                        date: '2025-12-06',
+                        time: '14:00',
+                        location: 'Alun-Alun Kidul Solo',
+                        description: 'Festival musik tahunan ArjunaFest',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=ArjunaFest',
+                        trending: false
+                    },
+                    {
+                        id: '50',
+                        title: 'International Golo Mori Jazz 2025',
+                        category: 'konser',
+                        price: 6500000,
+                        date: '2025-04-12',
+                        time: '18:00',
+                        location: 'Golo Mori Flores',
+                        description: 'Festival jazz internasional di Flores',
+                        image: 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Golo+Mori+Jazz',
+                        trending: true
+                    },
+                    
+                    // OLAHRAGA - 10 events
+                    {
+                        id: '11',
+                        title: 'Persija vs Persib',
+                        category: 'olahraga',
+                        price: 150000,
+                        date: '2024-12-20',
+                        time: '15:30',
+                        location: 'Stadion Gelora Bung Karno',
+                        description: 'Laga klasik sepakbola Indonesia',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Persija+vs+Persib',
+                        trending: true
+                    },
+                    {
+                        id: '12',
+                        title: 'Arema FC vs Bali United',
+                        category: 'olahraga',
+                        price: 120000,
+                        date: '2024-12-22',
+                        time: '15:30',
+                        location: 'Stadion Kanjuruhan',
+                        description: 'Pertandingan seru Liga 1 Indonesia',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Arema+vs+Bali',
+                        trending: false
+                    },
+                    {
+                        id: '13',
+                        title: 'Indonesia vs Thailand - Badminton',
+                        category: 'olahraga',
+                        price: 200000,
+                        date: '2025-01-08',
+                        time: '13:00',
+                        location: 'Istora Senayan',
+                        description: 'Pertandingan badminton internasional',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Badminton',
+                        trending: true
+                    },
+                    {
+                        id: '14',
+                        title: 'Marathon Jakarta 2025',
+                        category: 'olahraga',
+                        price: 300000,
+                        date: '2025-01-12',
+                        time: '05:00',
+                        location: 'Bundaran HI',
+                        description: 'Ikuti marathon tahunan Jakarta',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Marathon',
+                        trending: false
+                    },
+                    {
+                        id: '15',
+                        title: 'NBA Jakarta Showcase',
+                        category: 'olahraga',
+                        price: 500000,
+                        date: '2025-01-18',
+                        time: '19:00',
+                        location: 'Indonesia Arena',
+                        description: 'Pertandingan eksibisi NBA di Jakarta',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=NBA+Show',
+                        trending: true
+                    },
+                    {
+                        id: '16',
+                        title: 'Tennis Open Indonesia',
+                        category: 'olahraga',
+                        price: 250000,
+                        date: '2025-01-22',
+                        time: '09:00',
+                        location: 'Senayan Tennis Court',
+                        description: 'Turnamen tenis tingkat internasional',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Tennis',
+                        trending: false
+                    },
+                    {
+                        id: '17',
+                        title: 'MotoGP Mandalika 2025',
+                        category: 'olahraga',
+                        price: 800000,
+                        date: '2025-02-15',
+                        time: '14:00',
+                        location: 'Sirkuit Mandalika',
+                        description: 'Saksikan balapan MotoGP di Indonesia',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=MotoGP',
+                        trending: true
+                    },
+                    {
+                        id: '18',
+                        title: 'Volley Ball Championship',
+                        category: 'olahraga',
+                        price: 100000,
+                        date: '2025-02-20',
+                        time: '15:00',
+                        location: 'GOR Popki Cibubur',
+                        description: 'Kejuaraan bola voli nasional',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Volleyball',
+                        trending: false
+                    },
+                    {
+                        id: '19',
+                        title: 'E-Sports Championship',
+                        category: 'olahraga',
+                        price: 150000,
+                        date: '2025-02-25',
+                        time: '10:00',
+                        location: 'Jakarta Convention Center',
+                        description: 'Turnamen e-sports terbesar di Indonesia',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=E-Sports',
+                        trending: false
+                    },
+                    {
+                        id: '20',
+                        title: 'Fun Bike Jakarta',
+                        category: 'olahraga',
+                        price: 75000,
+                        date: '2025-03-01',
+                        time: '06:00',
+                        location: 'Monas',
+                        description: 'Gowes bareng keliling Jakarta',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Fun+Bike',
+                        trending: false
+                    },
+                    {
+                        id: '51',
+                        title: 'BFI Run 2025',
+                        category: 'olahraga',
+                        price: 750000,
+                        date: '2025-05-18',
+                        time: '05:00',
+                        location: 'GBK Jakarta',
+                        description: 'Half Marathon dengan kategori berbagai jarak',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=BFI+Run',
+                        trending: true
+                    },
+                    {
+                        id: '52',
+                        title: 'IFCPF 2025 Asia-Oceania Cup (Semi-Final)',
+                        category: 'olahraga',
+                        price: 0,
+                        date: '2025-11-20',
+                        time: '14:00',
+                        location: 'Stadion Manahan Solo',
+                        description: 'Semi-final piala Asia-Oceania terbuka untuk umum',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=IFCPF+Cup',
+                        trending: true
+                    },
+                    {
+                        id: '53',
+                        title: 'MR D.I.Y. Run 2025',
+                        category: 'olahraga',
+                        price: 200000,
+                        date: '2025-02-23',
+                        time: '05:30',
+                        location: 'Jakarta Pusat',
+                        description: 'Lari bersama dengan berbagai kategori',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=MR+DIY+Run',
+                        trending: false
+                    },
+                    {
+                        id: '54',
+                        title: 'Road to Bekasi Marathon 2025 (5K Fun Run)',
+                        category: 'olahraga',
+                        price: 25000,
+                        date: '2024-11-24',
+                        time: '05:00',
+                        location: 'Summarecon Bekasi',
+                        description: 'Fun run 5K untuk seluruh keluarga',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Bekasi+Marathon',
+                        trending: false
+                    },
+                    {
+                        id: '55',
+                        title: 'Binloop Ultra 120 (Simply Sixth)',
+                        category: 'olahraga',
+                        price: 1500000,
+                        date: '2023-05-05',
+                        time: '04:00',
+                        location: 'Bandung',
+                        description: 'Ultra marathon dengan jarak 200K',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Binloop+Ultra',
+                        trending: false
+                    },
+                    {
+                        id: '56',
+                        title: 'Women\'s Day Run 10K (WDR) 2025',
+                        category: 'olahraga',
+                        price: 300000,
+                        date: '2025-05-04',
+                        time: '06:00',
+                        location: 'BSD City',
+                        description: 'Lari khusus untuk perayaan hari wanita',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Women+Day+Run',
+                        trending: true
+                    },
+                    {
+                        id: '57',
+                        title: 'Jakarta Music Run Festival 2025',
+                        category: 'olahraga',
+                        price: 350000,
+                        date: '2025-04-20',
+                        time: '05:00',
+                        location: 'Senayan Jakarta',
+                        description: 'Lari sambil menikmati musik live',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Music+Run',
+                        trending: true
+                    },
+                    {
+                        id: '58',
+                        title: 'Zombie Run Festival',
+                        category: 'olahraga',
+                        price: 350000,
+                        date: '2025-02-22',
+                        time: '15:00',
+                        location: 'Ancol Jakarta',
+                        description: 'Lari dengan tema zombie yang seru',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Zombie+Run',
+                        trending: false
+                    },
+                    {
+                        id: '59',
+                        title: 'Persis Solo vs PSIM (Derby Mataram)',
+                        category: 'olahraga',
+                        price: 250000,
+                        date: '2025-11-08',
+                        time: '15:30',
+                        location: 'Stadion Manahan Solo',
+                        description: 'Derby klasik Jawa Tengah',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Derby+Mataram',
+                        trending: true
+                    },
+                    {
+                        id: '60',
+                        title: 'Fun Run Cak! Alfatekelits 2025',
+                        category: 'olahraga',
+                        price: 250000,
+                        date: '2025-02-16',
+                        time: '05:00',
+                        location: 'Surabaya',
+                        description: 'Fun run dengan tema khas Surabaya',
+                        image: 'https://via.placeholder.com/400x300/2ECC71/FFFFFF?text=Alfatekelits',
+                        trending: false
+                    },
+
+                    // SEMINAR - 10 events
+                    {
+                        id: '21',
+                        title: 'Seminar Digital Marketing 2024',
+                        category: 'seminar',
+                        price: 100000,
+                        date: '2024-12-18',
+                        time: '09:00',
+                        location: 'Hotel Grand Hyatt',
+                        description: 'Pelajari strategi digital marketing terkini',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Seminar+Digital',
+                        trending: false
+                    },
+                    {
+                        id: '22',
+                        title: 'Workshop AI & Machine Learning',
+                        category: 'seminar',
+                        price: 250000,
+                        date: '2024-12-27',
+                        time: '08:00',
+                        location: 'Universitas Indonesia',
+                        description: 'Pelatihan intensif AI dan ML untuk pemula',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=AI+Workshop',
+                        trending: true
+                    },
+                    {
+                        id: '23',
+                        title: 'Startup Summit 2025',
+                        category: 'seminar',
+                        price: 300000,
+                        date: '2025-01-14',
+                        time: '09:00',
+                        location: 'Ritz Carlton Pacific Place',
+                        description: 'Konferensi startup terbesar Indonesia',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Startup+Summit',
+                        trending: true
+                    },
+                    {
+                        id: '24',
+                        title: 'Public Speaking Mastery',
+                        category: 'seminar',
+                        price: 150000,
+                        date: '2025-01-17',
+                        time: '13:00',
+                        location: 'Menara BCA',
+                        description: 'Tingkatkan kemampuan public speaking Anda',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Public+Speaking',
+                        trending: false
+                    },
+                    {
+                        id: '25',
+                        title: 'Financial Planning Workshop',
+                        category: 'seminar',
+                        price: 200000,
+                        date: '2025-01-23',
+                        time: '10:00',
+                        location: 'The Energy Building',
+                        description: 'Belajar merencanakan keuangan untuk masa depan',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Financial',
+                        trending: false
+                    },
+                    {
+                        id: '26',
+                        title: 'Leadership Excellence',
+                        category: 'seminar',
+                        price: 350000,
+                        date: '2025-01-28',
+                        time: '08:30',
+                        location: 'Shangri-La Hotel',
+                        description: 'Seminar kepemimpinan untuk eksekutif',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Leadership',
+                        trending: false
+                    },
+                    {
+                        id: '27',
+                        title: 'Content Creator Bootcamp',
+                        category: 'seminar',
+                        price: 175000,
+                        date: '2025-02-03',
+                        time: '09:00',
+                        location: 'WeWork Plaza Indonesia',
+                        description: 'Menjadi content creator profesional',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Content+Creator',
+                        trending: true
+                    },
+                    {
+                        id: '28',
+                        title: 'Cyber Security Summit',
+                        category: 'seminar',
+                        price: 400000,
+                        date: '2025-02-12',
+                        time: '08:00',
+                        location: 'Hotel Mulia Senayan',
+                        description: 'Konferensi keamanan siber internasional',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Cyber+Security',
+                        trending: false
+                    },
+                    {
+                        id: '29',
+                        title: 'E-Commerce Strategy 2025',
+                        category: 'seminar',
+                        price: 180000,
+                        date: '2025-02-18',
+                        time: '13:00',
+                        location: 'Kempinski Grand Indonesia',
+                        description: 'Strategi e-commerce di era digital',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=E-Commerce',
+                        trending: false
+                    },
+                    {
+                        id: '30',
+                        title: 'Motivasi & Produktivitas',
+                        category: 'seminar',
+                        price: 120000,
+                        date: '2025-02-24',
+                        time: '14:00',
+                        location: 'Balai Kartini',
+                        description: 'Tingkatkan motivasi dan produktivitas harian',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Motivasi',
+                        trending: false
+                    },
+                    {
+                        id: '61',
+                        title: 'Workshop Meta Ads 2024: Rahasia High Quality Leads',
+                        category: 'seminar',
+                        price: 100000,
+                        date: '2024-08-02',
+                        time: '09:00',
+                        location: 'Hotel Alila Solo',
+                        description: 'Workshop mendalam tentang Meta Ads',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Meta+Ads',
+                        trending: false
+                    },
+                    {
+                        id: '62',
+                        title: 'Polarisasi Musikal X BEM UNS',
+                        category: 'seminar',
+                        price: 850000,
+                        date: '2025-11-14',
+                        time: '13:00',
+                        location: 'Universitas Sebelas Maret',
+                        description: 'Screening dan talkshow musik',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Polarisasi+Musikal',
+                        trending: true
+                    },
+                    {
+                        id: '63',
+                        title: 'Foundation Workshop: Management for Gen Z',
+                        category: 'seminar',
+                        price: 400000,
+                        date: '2025-11-08',
+                        time: '08:00',
+                        location: 'Solo Creative Hub',
+                        description: 'Workshop manajemen khusus Gen Z',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Management+Gen+Z',
+                        trending: false
+                    },
+                    {
+                        id: '64',
+                        title: 'Seminar Nasional Monetion 2024',
+                        category: 'seminar',
+                        price: 20000,
+                        date: '2024-09-30',
+                        time: '08:00',
+                        location: 'FEB Universitas Muhammadiyah Surakarta',
+                        description: 'Seminar nasional HEMa Manajemen',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Monetion',
+                        trending: false
+                    },
+                    {
+                        id: '65',
+                        title: 'Workshop Akuntax: Kesiapan SPT Tahunan',
+                        category: 'seminar',
+                        price: 250000,
+                        date: '2025-01-21',
+                        time: '09:00',
+                        location: 'Wisma Kahuripan Solo',
+                        description: 'Workshop persiapan SPT Tahunan yayasan',
+                        image: 'hotelsyahidsoloseminar2.png',
+                        trending: false
+                    },
+                    {
+                        id: '66',
+                        title: 'TDA Club: Public Speaking for Entrepreneur',
+                        category: 'seminar',
+                        price: 50000,
+                        date: '2024-09-04',
+                        time: '13:00',
+                        location: 'The Sunan Hotel Solo',
+                        description: 'Public speaking untuk pengusaha dan pemimpin',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Public+Speaking',
+                        trending: false
+                    },
+                    {
+                        id: '67',
+                        title: 'YOT Solo Workshop: Build a Great CV',
+                        category: 'seminar',
+                        price: 10000,
+                        date: '2020-12-05',
+                        time: '14:00',
+                        location: 'Coworking Space Solo',
+                        description: 'Workshop membuat CV yang menarik',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Build+CV',
+                        trending: false
+                    },
+                    {
+                        id: '68',
+                        title: 'Healing & Growing: Bloom Where You Are',
+                        category: 'seminar',
+                        price: 50000,
+                        date: '2025-12-13',
+                        time: '10:00',
+                        location: 'Rumah Atsiri Solo',
+                        description: 'Seminar tentang healing dan personal growth',
+                        image: 'https://via.placeholder.com/400x300/F1C40F/000000?text=Healing+Growing',
+                        trending: true
+                    },
+                    {
+                        id: '69',
+                        title: 'Belajar Bareng Tiktok Shop (Khusus Pemula)',
+                        category: 'seminar',
+                        price: 99000,
+                        date: '2023-02-04',
+                        time: '09:00',
+                        location: 'Solo Technopark',
+                        description: 'Workshop TikTok Shop untuk pemula',
+                        image: 'tiktokseminar1.png',
+                        trending: false
+                    },
+
+                    // KESENIAN - 10 events
+                    {
+                        id: '31',
+                        title: 'Pameran Seni Rupa Nusantara',
+                        category: 'kesenian',
+                        price: 50000,
+                        date: '2024-12-22',
+                        time: '10:00',
+                        location: 'Galeri Nasional Indonesia',
+                        description: 'Pameran karya seni dari seluruh Indonesia',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Seni+Nusantara',
+                        trending: false
+                    },
+                    {
+                        id: '32',
+                        title: 'Teater Musikal Indonesia',
+                        category: 'kesenian',
+                        price: 180000,
+                        date: '2024-12-30',
+                        time: '19:00',
+                        location: 'Teater Jakarta',
+                        description: 'Pertunjukan musikal dengan aktor terbaik',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Teater+Musikal',
+                        trending: true
+                    },
+                    {
+                        id: '33',
+                        title: 'Wayang Kulit Klasik',
+                        category: 'kesenian',
+                        price: 40000,
+                        date: '2025-01-11',
+                        time: '20:00',
+                        location: 'Taman Ismail Marzuki',
+                        description: 'Pertunjukan wayang kulit tradisional',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Wayang+Kulit',
+                        trending: false
+                    },
+                    {
+                        id: '34',
+                        title: 'Pameran Fotografi Jakarta',
+                        category: 'kesenian',
+                        price: 30000,
+                        date: '2025-01-16',
+                        time: '10:00',
+                        location: 'Ruang Kreatif Salihara',
+                        description: 'Koleksi foto terbaik fotografer Indonesia',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Fotografi',
+                        trending: false
+                    },
+                    {
+                        id: '35',
+                        title: 'Tari Kontemporer Modern',
+                        category: 'kesenian',
+                        price: 120000,
+                        date: '2025-01-21',
+                        time: '19:30',
+                        location: 'Graha Bhakti Budaya',
+                        description: 'Pertunjukan tari kontemporer yang memukau',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Tari+Kontemporer',
+                        trending: true
+                    },
+                    {
+                        id: '36',
+                        title: 'Festival Batik Indonesia',
+                        category: 'kesenian',
+                        price: 25000,
+                        date: '2025-01-27',
+                        time: '09:00',
+                        location: 'Museum Tekstil',
+                        description: 'Pameran dan workshop batik nusantara',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Festival+Batik',
+                        trending: false
+                    },
+                    {
+                        id: '37',
+                        title: 'Stand Up Comedy Festival',
+                        category: 'kesenian',
+                        price: 150000,
+                        date: '2025-02-07',
+                        time: '19:00',
+                        location: 'The Tribrata Auditorium',
+                        description: 'Festival komedi dengan komedian terbaik',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Comedy+Festival',
+                        trending: true
+                    },
+                    {
+                        id: '38',
+                        title: 'Pameran Lukisan Affandi',
+                        category: 'kesenian',
+                        price: 35000,
+                        date: '2025-02-14',
+                        time: '10:00',
+                        location: 'Museum Affandi',
+                        description: 'Karya-karya maestro Affandi',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Affandi',
+                        trending: false
+                    },
+                    {
+                        id: '39',
+                        title: 'Gamelan Orchestra Performance',
+                        category: 'kesenian',
+                        price: 60000,
+                        date: '2025-02-19',
+                        time: '18:00',
+                        location: 'Teater Salihara',
+                        description: 'Orkestra gamelan dengan sentuhan modern',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Gamelan',
+                        trending: false
+                    },
+                    {
+                        id: '40',
+                        title: 'Seni Instalasi Kontemporer',
+                        category: 'kesenian',
+                        price: 45000,
+                        date: '2025-02-26',
+                        time: '11:00',
+                        location: 'Dia.Lo.Gue Artspace',
+                        description: 'Pameran seni instalasi interaktif',
+                        image: 'tiktokseminar1.png',
+                        trending: false
+                    },
+                    {
+                        id: '70',
+                        title: 'Pementasan Seni "Merajut Cerita Menyatukan Rasa"',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-10-26',
+                        time: '18:00',
+                        location: 'Taman Budaya Solo',
+                        description: 'Pementasan seni terbuka untuk apresiasi',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Merajut+Cerita',
+                        trending: false
+                    },
+                    {
+                        id: '71',
+                        title: 'Begawi Budaya Dewan Kesenian Metro',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-11-15',
+                        time: '17:00',
+                        location: 'Gedung Kesenian Metro',
+                        description: 'Pentas seni budaya daerah Metro',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Begawi+Budaya',
+                        trending: false
+                    },
+                    {
+                        id: '72',
+                        title: 'Festival Teater Indonesia 2025',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-12-06',
+                        time: '18:00',
+                        location: 'Teater Jakarta TIM',
+                        description: 'Festival teater nasional dengan reservasi',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Festival+Teater',
+                        trending: true
+                    },
+                    {
+                        id: '73',
+                        title: 'Pertunjukan Seni Gambang Semarang',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-11-23',
+                        time: '19:00',
+                        location: 'Lawang Sewu Semarang',
+                        description: 'Pertunjukan musik tradisional Gambang Semarang',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Gambang+Semarang',
+                        trending: false
+                    },
+                    {
+                        id: '74',
+                        title: 'Gelar Seni Pasar Kangen Yogyakarta',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-09-07',
+                        time: '10:00',
+                        location: 'Alun-Alun Kidul Yogyakarta',
+                        description: 'Festival seni dan kuliner tradisional',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Pasar+Kangen',
+                        trending: true
+                    },
+                    {
+                        id: '75',
+                        title: 'Gelar Seni Rakyat (Jaranan Jawa Timur)',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-11-27',
+                        time: '16:00',
+                        location: 'Pendopo Kabupaten Ponorogo',
+                        description: 'Pertunjukan seni Jaranan khas Jawa Timur',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Jaranan',
+                        trending: false
+                    },
+                    {
+                        id: '76',
+                        title: 'Surabaya Punya Wayang Orang',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-11-22',
+                        time: '19:00',
+                        location: 'Gedung Cak Durasim Surabaya',
+                        description: 'Pertunjukan wayang orang khas Surabaya',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Wayang+Orang',
+                        trending: false
+                    },
+                    {
+                        id: '77',
+                        title: 'International Mask Festival (IMF) 2025',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-11-14',
+                        time: '15:00',
+                        location: 'Alun-Alun Kota Malang',
+                        description: 'Festival topeng internasional',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Mask+Festival',
+                        trending: true
+                    },
+                    {
+                        id: '78',
+                        title: 'Malam Anugerah Sayembara Naskah Teater 2025',
+                        category: 'kesenian',
+                        price: 0,
+                        date: '2025-11-27',
+                        time: '19:00',
+                        location: 'Graha Bhakti Budaya Jakarta',
+                        description: 'Malam penganugerahan naskah teater terbaik',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Anugerah+Teater',
+                        trending: false
+                    },
+                    {
+                        id: '79',
+                        title: 'Festival Kesenian Rakyat Semilir',
+                        category: 'kesenian',
+                        price: 40000,
+                        date: '2025-10-19',
+                        time: '14:00',
+                        location: 'Alun-Alun Semilir Solo',
+                        description: 'Festival kesenian rakyat dengan berbagai pertunjukan',
+                        image: 'https://via.placeholder.com/400x300/E74C3C/FFFFFF?text=Festival+Semilir',
+                        trending: true
+                    }
+                ];
+                localStorage.setItem(DB.events, JSON.stringify(sampleEvents));
+            }
+
+            if (!localStorage.getItem(DB.cart)) {
+                localStorage.setItem(DB.cart, JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem(DB.orders)) {
+                localStorage.setItem(DB.orders, JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem(DB.tickets)) {
+                localStorage.setItem(DB.tickets, JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem(DB.settings)) {
+                localStorage.setItem(DB.settings, JSON.stringify({
+                    darkMode: false,
+                    theme: 'default'
+                }));
+            }
+
+            if (!localStorage.getItem(DB.profile)) {
+                localStorage.setItem(DB.profile, JSON.stringify({
+                    name: 'Pengguna BAMStix',
+                    bio: 'Pecinta event dan hiburan',
+                    avatar: 'https://via.placeholder.com/150/3A7BCE/FFFFFF?text=USER'
+                }));
+            }
+        }
+
+        function getEvents() {
+            return JSON.parse(localStorage.getItem(DB.events)) || [];
+        }
+
+        function saveEvents(events) {
+            localStorage.setItem(DB.events, JSON.stringify(events));
+        }
+
+        function getCart() {
+            return JSON.parse(localStorage.getItem(DB.cart)) || [];
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem(DB.cart, JSON.stringify(cart));
+            updateCartBadge();
+        }
+
+        function getOrders() {
+            return JSON.parse(localStorage.getItem(DB.orders)) || [];
+        }
+
+        function saveOrders(orders) {
+            localStorage.setItem(DB.orders, JSON.stringify(orders));
+        }
+
+        function getTickets() {
+            return JSON.parse(localStorage.getItem(DB.tickets)) || [];
+        }
+
+        function saveTickets(tickets) {
+            localStorage.setItem(DB.tickets, JSON.stringify(tickets));
+        }
+
+        function getSettings() {
+            return JSON.parse(localStorage.getItem(DB.settings)) || { darkMode: false, theme: 'default' };
+        }
+
+        function saveSettings(settings) {
+            localStorage.setItem(DB.settings, JSON.stringify(settings));
+        }
+
+        function getProfile() {
+            return JSON.parse(localStorage.getItem(DB.profile)) || { name: 'Pengguna BAMStix', bio: 'Pecinta event dan hiburan', avatar: 'https://via.placeholder.com/150/3A7BCE/FFFFFF?text=USER' };
+        }
+
+        function saveProfile(profile) {
+            localStorage.setItem(DB.profile, JSON.stringify(profile));
+        }
+
+        // ===== UI FUNCTIONS =====
+        function showLoader() {
+            document.getElementById('pageLoader').classList.remove('hide');
+        }
+
+        function hideLoader() {
+            setTimeout(() => {
+                document.getElementById('pageLoader').classList.add('hide');
+            }, 300);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast-custom ${type}`;
+            toast.innerHTML = `<i class="bi bi-check-circle me-2"></i>${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 2000);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function updateCartBadge() {
+            const cart = getCart();
+            const badge = document.getElementById('cartBadge');
+            if (cart.length > 0) {
+                badge.textContent = cart.length;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function toggleDarkMode() {
+            const settings = getSettings();
+            settings.darkMode = !settings.darkMode;
+            saveSettings(settings);
+
+            document.body.classList.toggle('dark-mode');
+            const icon = document.getElementById('darkModeToggle');
+            icon.className = settings.darkMode ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            showToast('Mode tampilan diubah', 'success');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
+
+        // ===== IMAGE MODAL FUNCTIONS =====
+        function openImageModal(imageSrc, caption) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const modalCaption = document.getElementById('modalCaption');
+            
+            modal.classList.add('active');
+            modalImg.src = imageSrc;
+            modalCaption.textContent = caption;
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+            
+            // Restore body scroll
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+
+        // ===== PAGE RENDERING =====
+        function showPage(page, data = null) {
+            showLoader();
+            window.scrollTo(0, 0);
+            
+            // Don't close sidebar if already on page
+            if (document.getElementById('sidebar').classList.contains('active')) {
+                toggleSidebar();
+            }
+
+            // Update page history for back button
+            if (page !== 'home') {
+                pageHistory.push({page, data});
+                document.getElementById('backButton').style.display = 'block';
+            } else {
+                pageHistory = [];
+                document.getElementById('backButton').style.display = 'none';
+            }
+
+            setTimeout(() => {
+                const container = document.getElementById('mainContainer');
+                container.classList.remove('fade-in');
+
+                switch(page) {
+                    case 'home':
+                        renderHomePage();
+                        break;
+                    case 'category':
+                        renderCategoryPage(data);
+                        break;
+                    case 'detail':
+                        renderDetailPage(data);
+                        break;
+                    case 'cart':
+                        renderCartPage();
+                        break;
+                    case 'checkout':
+                        renderCheckoutPage(data);
+                        break;
+                    case 'success':
+                        renderSuccessPage();
+                        break;
+                    case 'mytickets':
+                        renderMyTicketsPage();
+                        break;
+                    case 'scanner':
+                        renderScannerPage();
+                        break;
+                    case 'admin':
+                        renderAdminPage();
+                        break;
+                    case 'profile':
+                        renderProfilePage();
+                        break;
+                }
+
+                setTimeout(() => {
+                    container.classList.add('fade-in');
+                    hideLoader();
+                }, 100);
+            }, 150);
+        }
+
+        function goBack() {
+            if (pageHistory.length > 0) {
+                pageHistory.pop(); // Remove current page
+                
+                if (pageHistory.length > 0) {
+                    const previousPage = pageHistory.pop(); // Get previous page
+                    showPage(previousPage.page, previousPage.data);
+                } else {
+                    showPage('home');
+                }
+            } else {
+                showPage('home');
+            }
+        }
+
+        function renderHomePage() {
+            const events = getEvents();
+            const tickets = getTickets();
+            const recentTickets = tickets.slice(-4);
+
+            let historyHTML = '';
+            if (recentTickets.length > 0) {
+                historyHTML = `
+                    <div class="history-section">
+                        <div class="history-title">Riwayat Terakhir Pembelian Tiket</div>
+                        <div class="history-grid">
+                            ${recentTickets.map(ticket => `
+                                <div class="qr-mini" onclick="showTicketDetail('${ticket.id}')">
+                                    <div id="qr-mini-${ticket.id}"></div>
+                                    <small>${ticket.eventTitle.substring(0, 15)}...</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const html = `
+                ${historyHTML}
+
+                <div class="icon-bar">
+                    <div class="icon-item" onclick="filterByCategory('olahraga')">
+                        <i class="bi bi-trophy"></i>
+                        <span>Olahraga</span>
+                    </div>
+                    <div class="icon-item" onclick="filterByCategory('konser')">
+                        <i class="bi bi-music-note-beamed"></i>
+                        <span>Konser</span>
+                    </div>
+                    <div class="icon-item" onclick="filterByCategory('seminar')">
+                        <i class="bi bi-megaphone"></i>
+                        <span>Seminar</span>
+                    </div>
+                    <div class="icon-item" onclick="filterByCategory('kesenian')">
+                        <i class="bi bi-palette"></i>
+                        <span>Kesenian</span>
+                    </div>
+                </div>
+
+                <div class="carousel-section">
+                    <h2>Beberapa Event yang Sedang Trending</h2>
+                    <div id="eventCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            ${events.filter(e => e.trending).map((_, i) => `
+                                <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="${i}" ${i === 0 ? 'class="active"' : ''}></button>
+                            `).join('')}
+                        </div>
+                        <div class="carousel-inner">
+                            ${events.filter(e => e.trending).map((event, i) => `
+                                <div class="carousel-item ${i === 0 ? 'active' : ''}" onclick="showEventDetail('${event.id}')">
+                                    <img src="${event.image}" class="d-block w-100" alt="${event.title}">
+                                    <div class="carousel-caption d-none d-md-block">
+                                        <h5>${event.title}</h5>
+                                        <p>${formatCurrency(event.price)}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#eventCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#eventCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <h2 class="mt-4 mb-3">Semua Event</h2>
+                <div class="row">
+                    ${events.map(event => `
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card-custom event-card" onclick="showEventDetail('${event.id}')">
+                                ${event.trending ? '<span class="badge-trending">Trending</span>' : ''}
+                                <img src="${event.image}" alt="${event.title}" onclick="event.stopPropagation(); openImageModal('${event.image}', '${event.title}')">
+                                <div class="event-card-body">
+                                    <div class="event-title">${event.title}</div>
+                                    <div class="event-price">${formatCurrency(event.price)}</div>
+                                    <div class="event-info">
+                                        <i class="bi bi-calendar"></i> ${formatDate(event.date)}
+                                    </div>
+                                    <div class="event-info">
+                                        <i class="bi bi-geo-alt"></i> ${event.location}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+
+            // Generate QR codes for recent tickets
+            setTimeout(() => {
+                recentTickets.forEach(ticket => {
+                    const qrElement = document.getElementById(`qr-mini-${ticket.id}`);
+                    if (qrElement) {
+                        qrElement.innerHTML = '';
+                        new QRCode(qrElement, {
+                            text: ticket.qrCode,
+                            width: 60,
+                            height: 60
+                        });
+                    }
+                });
+            }, 100);
+        }
+
+        function renderCategoryPage(category) {
+            const events = getEvents().filter(e => e.category === category);
+            
+            const html = `
+                <h2 class="mb-4">Event ${category.charAt(0).toUpperCase() + category.slice(1)}</h2>
+                <div class="row">
+                    ${events.length > 0 ? events.map(event => `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card-custom event-card" onclick="showEventDetail('${event.id}')">
+                                <img src="${event.image}" alt="${event.title}" onclick="event.stopPropagation(); openImageModal('${event.image}', '${event.title}')">
+                                <div class="event-card-body">
+                                    <div class="event-title">${event.title}</div>
+                                    <div class="event-price">${formatCurrency(event.price)}</div>
+                                    <div class="event-info">
+                                        <i class="bi bi-calendar"></i> ${formatDate(event.date)}
+                                    </div>
+                                    <div class="event-info">
+                                        <i class="bi bi-geo-alt"></i> ${event.location}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('') : '<p class="text-center">Tidak ada event dalam kategori ini</p>'}
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function renderDetailPage(eventId) {
+            const event = getEvents().find(e => e.id === eventId);
+            if (!event) return;
+
+            const html = `
+                <div class="card-custom">
+                    <img src="${event.image}" style="width: 100%; height: 300px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${event.image}', '${event.title}')" alt="${event.title}">
+                    <div class="p-4">
+                        <h1 class="event-title mb-3">${event.title}</h1>
+                        <div class="event-info mb-2">
+                            <i class="bi bi-calendar"></i> ${formatDate(event.date)} - ${event.time}
+                        </div>
+                        <div class="event-info mb-2">
+                            <i class="bi bi-geo-alt"></i> ${event.location}
+                        </div>
+                        <div class="event-price my-4">${formatCurrency(event.price)}</div>
+                        <p style="line-height: 1.8;">${event.description}</p>
+                        <button class="btn-primary-custom mt-3" onclick="addToCart('${event.id}')">
+                            <i class="bi bi-cart-plus"></i> Beli Tiket
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function renderCartPage() {
+            const cart = getCart();
+            
+            if (cart.length === 0) {
+                const html = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-cart-x" style="font-size: 100px; color: var(--grey);"></i>
+                        <h3 class="mt-3">Keranjang Kosong</h3>
+                        <p>Belum ada tiket yang ditambahkan</p>
+                        <button class="btn-primary-custom mt-3" onclick="showPage('home')" style="max-width: 300px;">
+                            Lihat Event
+                        </button>
+                    </div>
+                `;
+                document.getElementById('mainContainer').innerHTML = html;
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            const html = `
+                <h2 class="mb-4">Keranjang Tiket</h2>
+                ${cart.map((item, index) => `
+                    <div class="card-custom mb-3">
+                        <div class="row g-0 p-3">
+                            <div class="col-4">
+                                <img src="${item.image}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 12px;">
+                            </div>
+                            <div class="col-8 ps-3">
+                                <h5>${item.title}</h5>
+                                <p class="event-price mb-2">${formatCurrency(item.price)}</p>
+                                <div class="qty-control" style="justify-content: flex-start;">
+                                    <button class="qty-btn" onclick="updateCartQty(${index}, -1)">-</button>
+                                    <span class="qty-value">${item.quantity}</span>
+                                    <button class="qty-btn" onclick="updateCartQty(${index}, 1)">+</button>
+                                    <button class="btn btn-sm btn-danger ms-3" onclick="removeFromCart(${index})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+                
+                <div class="card-custom p-4 mt-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h4>Total</h4>
+                        <h4 class="text-primary">${formatCurrency(total)}</h4>
+                    </div>
+                    <button class="btn-primary-custom" onclick="proceedToCheckout()">
+                        Lanjut ke Pembayaran
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function renderCheckoutPage(orderId) {
+            const order = getOrders().find(o => o.id === orderId);
+            if (!order) return;
+
+            const html = `
+                <div class="qr-container">
+                    <h2>Pembayaran</h2>
+                    <p class="mt-3">Total Pembayaran: <strong class="text-primary">${formatCurrency(order.total)}</strong></p>
+                    
+                    <div class="card-custom p-4 my-4">
+                        <h5 class="mb-3">Pilih Metode Pembayaran</h5>
+                        
+                        <div class="payment-method mb-3 p-3 border rounded" style="cursor: pointer;" onclick="selectPaymentMethod('qris')">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-qr-code" style="font-size: 32px; color: var(--primary);"></i>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">QRIS</h6>
+                                    <small class="text-muted">Scan QR untuk pembayaran</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-method mb-3 p-3 border rounded" style="cursor: pointer;" onclick="selectPaymentMethod('transfer')">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-bank" style="font-size: 32px; color: var(--primary);"></i>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Transfer Bank</h6>
+                                    <small class="text-muted">BCA, Mandiri, BRI, BNI</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-method mb-3 p-3 border rounded" style="cursor: pointer;" onclick="selectPaymentMethod('ewallet')">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-wallet2" style="font-size: 32px; color: var(--primary);"></i>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">E-Wallet</h6>
+                                    <small class="text-muted">GoPay, OVO, DANA, ShopeePay</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-method mb-3 p-3 border rounded" style="cursor: pointer;" onclick="selectPaymentMethod('credit')">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-credit-card" style="font-size: 32px; color: var(--primary);"></i>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Kartu Kredit/Debit</h6>
+                                    <small class="text-muted">Visa, MasterCard, JCB</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="paymentDetails" style="display: none;">
+                        <div class="card-custom p-4 mb-3">
+                            <div id="paymentContent"></div>
+                        </div>
+                        <button class="btn-primary-custom" onclick="confirmPayment('${orderId}')" style="max-width: 400px;">
+                            <i class="bi bi-check-circle"></i> Konfirmasi Pembayaran
+                        </button>
+                    </div>
+                    
+                    <button class="btn btn-outline-secondary mt-2" onclick="goBack()" style="max-width: 400px; border-radius: 12px; height: 46px;">
+                        Kembali
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function selectPaymentMethod(method) {
+            const detailsDiv = document.getElementById('paymentDetails');
+            const contentDiv = document.getElementById('paymentContent');
+            
+            detailsDiv.style.display = 'block';
+            
+            // Highlight selected method
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.style.backgroundColor = '';
+                el.style.borderColor = '';
+            });
+            event.target.closest('.payment-method').style.backgroundColor = 'var(--soft-blue)';
+            event.target.closest('.payment-method').style.borderColor = 'var(--primary)';
+            
+            let content = '';
+            
+            switch(method) {
+                case 'qris':
+                    content = `
+                        <h5 class="text-center mb-3">Scan QRIS</h5>
+                        <div id="qrisCode" class="text-center"></div>
+                        <p class="text-center text-muted mt-3">Scan dengan aplikasi pembayaran Anda</p>
+                    `;
+                    contentDiv.innerHTML = content;
+                    setTimeout(() => {
+                        new QRCode(document.getElementById('qrisCode'), {
+                            text: `QRIS-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            width: 200,
+                            height: 200
+                        });
+                    }, 100);
+                    break;
+                    
+                case 'transfer':
+                    content = `
+                        <h5 class="mb-3">Transfer Bank</h5>
+                        <div class="mb-3">
+                            <p><strong>Bank BCA</strong></p>
+                            <p>No. Rekening: <strong>1234567890</strong></p>
+                            <p>a.n. BAMStix Indonesia</p>
+                        </div>
+                        <div class="alert alert-info">
+                            <small><i class="bi bi-info-circle me-2"></i>Transfer sesuai nominal yang tertera, lalu klik konfirmasi pembayaran</small>
+                        </div>
+                    `;
+                    contentDiv.innerHTML = content;
+                    break;
+                    
+                case 'ewallet':
+                    content = `
+                        <h5 class="mb-3">E-Wallet</h5>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" style="border-radius: 12px; height: 50px;">
+                                <i class="bi bi-wallet2 me-2"></i>GoPay
+                            </button>
+                            <button class="btn btn-outline-primary" style="border-radius: 12px; height: 50px;">
+                                <i class="bi bi-wallet2 me-2"></i>OVO
+                            </button>
+                            <button class="btn btn-outline-primary" style="border-radius: 12px; height: 50px;">
+                                <i class="bi bi-wallet2 me-2"></i>DANA
+                            </button>
+                            <button class="btn btn-outline-primary" style="border-radius: 12px; height: 50px;">
+                                <i class="bi bi-wallet2 me-2"></i>ShopeePay
+                            </button>
+                        </div>
+                    `;
+                    contentDiv.innerHTML = content;
+                    break;
+                    
+                case 'credit':
+                    content = `
+                        <h5 class="mb-3">Kartu Kredit/Debit</h5>
+                        <form onsubmit="return false;">
+                            <div class="mb-3">
+                                <label class="form-label">Nomor Kartu</label>
+                                <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" style="border-radius: 12px; height: 46px;">
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label">Exp. Date</label>
+                                    <input type="text" class="form-control" placeholder="MM/YY" maxlength="5" style="border-radius: 12px; height: 46px;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">CVV</label>
+                                    <input type="text" class="form-control" placeholder="123" maxlength="3" style="border-radius: 12px; height: 46px;">
+                                </div>
+                            </div>
+                        </form>
+                    `;
+                    contentDiv.innerHTML = content;
+                    break;
+            }
+        }
+
+        function confirmPayment(orderId) {
+            if (!confirm('Apakah Anda yakin pembayaran sudah dilakukan?')) return;
+            
+            showLoader();
+            
+            // Simulate payment processing
+            setTimeout(() => {
+                const orders = getOrders();
+                const order = orders.find(o => o.id === orderId);
+                if (!order) return;
+
+                order.status = 'success';
+                saveOrders(orders);
+
+                // Create tickets
+                const tickets = getTickets();
+                order.items.forEach(item => {
+                    const ticketId = 'TKT-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                    tickets.push({
+                        id: ticketId,
+                        orderId: orderId,
+                        eventId: item.eventId,
+                        eventTitle: item.title,
+                        eventDate: item.date,
+                        eventTime: item.time,
+                        eventImage: item.image,
+                        location: item.location,
+                        quantity: item.quantity,
+                        qrCode: ticketId,
+                        status: 'active',
+                        purchaseDate: new Date().toISOString()
+                    });
+                });
+                saveTickets(tickets);
+
+                // Clear cart
+                saveCart([]);
+
+                hideLoader();
+                showPage('success');
+            }, 1500);
+        }
+
+        function renderSuccessPage() {
+            const html = `
+                <div class="success-screen">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <h1>BERHASIL!</h1>
+                    <p class="mt-3">Pembayaran Anda telah berhasil diproses</p>
+                    <p>Tiket sudah tersimpan di "Tiket Saya"</p>
+                    <button class="btn-primary-custom mt-4" onclick="showMyTickets()" style="max-width: 300px;">
+                        Lihat Tiket
+                    </button>
+                    <button class="btn btn-outline-primary mt-2" onclick="showPage('home')" style="max-width: 300px; border-radius: 12px; height: 46px;">
+                        Kembali ke Beranda
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function renderMyTicketsPage() {
+            const tickets = getTickets();
+            
+            if (tickets.length === 0) {
+                const html = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-ticket-perforated" style="font-size: 100px; color: var(--grey);"></i>
+                        <h3 class="mt-3">Belum Ada Tiket</h3>
+                        <p>Beli tiket event favoritmu sekarang</p>
+                        <button class="btn-primary-custom mt-3" onclick="showPage('home')" style="max-width: 300px;">
+                            Lihat Event
+                        </button>
+                    </div>
+                `;
+                document.getElementById('mainContainer').innerHTML = html;
+                return;
+            }
+
+            const html = `
+                <h2 class="mb-4">Tiket Saya</h2>
+                ${tickets.map(ticket => `
+                    <div class="card-custom mb-3">
+                        <div class="row g-0">
+                            <div class="col-md-4">
+                                <img src="${ticket.eventImage}" style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${ticket.eventImage}', '${ticket.eventTitle}')" alt="${ticket.eventTitle}">
+                            </div>
+                            <div class="col-md-8 p-4">
+                                <h4>${ticket.eventTitle}</h4>
+                                <p class="event-info mb-1">
+                                    <i class="bi bi-calendar"></i> ${formatDate(ticket.eventDate)} - ${ticket.eventTime}
+                                </p>
+                                <p class="event-info mb-1">
+                                    <i class="bi bi-geo-alt"></i> ${ticket.location}
+                                </p>
+                                <p class="mt-2"><strong>Jumlah Tiket:</strong> ${ticket.quantity}</p>
+                                <p><strong>No. Tiket:</strong> ${ticket.id}</p>
+                                <span class="badge ${ticket.status === 'used' ? 'bg-secondary' : 'bg-success'} mb-3">
+                                    ${ticket.status === 'used' ? 'Sudah Digunakan' : 'Aktif'}
+                                </span>
+                                <button class="btn-primary-custom" onclick="showTicketQR('${ticket.id}')">
+                                    <i class="bi bi-qr-code"></i> Lihat QR Code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function renderScannerPage() {
+            const html = `
+                <h2 class="mb-4">QR Code Scanner</h2>
+                <div class="card-custom p-4">
+                    <p class="text-center mb-4">Masukkan kode tiket untuk validasi</p>
+                    <input type="text" class="form-control mb-3" id="ticketCode" placeholder="Masukkan kode tiket..." style="border-radius: 12px; height: 46px;">
+                    <button class="btn-primary-custom" onclick="validateTicket()">
+                        <i class="bi bi-search"></i> Validasi Tiket
+                    </button>
+                    <div id="scanResult" class="mt-4"></div>
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function renderAdminPage() {
+            const events = getEvents();
+            
+            const html = `
+                <h2 class="mb-4">Admin Panel</h2>
+                <button class="btn-primary-custom mb-4" onclick="showAddEventModal()">
+                    <i class="bi bi-plus-circle"></i> Tambah Event Baru
+                </button>
+
+                <div class="row">
+                    ${events.map(event => `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card-custom">
+                                <img src="${event.image}" alt="${event.title}" style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${event.image}', '${event.title}')">
+                                <div class="p-3">
+                                    <h5>${event.title}</h5>
+                                    <p class="mb-2"><small>${event.category}</small></p>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-warning flex-fill" onclick="editEvent('${event.id}')">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger flex-fill" onclick="deleteEvent('${event.id}')">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        // ===== EVENT FUNCTIONS =====
+        function showEventDetail(eventId) {
+            showPage('detail', eventId);
+        }
+
+        function filterByCategory(category) {
+            showPage('category', category);
+        }
+
+        function addToCart(eventId) {
+            const event = getEvents().find(e => e.id === eventId);
+            if (!event) return;
+
+            const cart = getCart();
+            const existingItem = cart.find(item => item.eventId === eventId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    eventId: event.id,
+                    title: event.title,
+                    price: event.price,
+                    image: event.image,
+                    date: event.date,
+                    time: event.time,
+                    location: event.location,
+                    quantity: 1
+                });
+            }
+
+            saveCart(cart);
+            showToast('Tiket berhasil ditambahkan ke keranjang', 'success');
+            
+            // Redirect to cart page
+            setTimeout(() => {
+                showCart();
+            }, 1000);
+        }
+
+        function showCart() {
+            showPage('cart');
+        }
+
+        function updateCartQty(index, change) {
+            const cart = getCart();
+            cart[index].quantity += change;
+
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+
+            saveCart(cart);
+            renderCartPage();
+        }
+
+        function removeFromCart(index) {
+            const cart = getCart();
+            cart.splice(index, 1);
+            saveCart(cart);
+            showToast('Tiket dihapus dari keranjang', 'info');
+            renderCartPage();
+        }
+
+        function proceedToCheckout() {
+            const cart = getCart();
+            if (cart.length === 0) return;
+
+            const orderId = 'ORD-' + Date.now();
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            const order = {
+                id: orderId,
+                items: cart,
+                total: total,
+                status: 'pending',
+                timestamp: new Date().toISOString()
+            };
+
+            const orders = getOrders();
+            orders.push(order);
+            saveOrders(orders);
+
+            showPage('checkout', orderId);
+        }
+
+        function startCountdown(seconds, orderId) {
+            // Function no longer used with real payment method
+        }
+
+        function simulatePayment(orderId) {
+            // Function replaced by confirmPayment
+        }
+
+        function cancelOrder(orderId) {
+            const orders = getOrders();
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'cancelled';
+                saveOrders(orders);
+            }
+            showToast('Order dibatalkan', 'error');
+            showPage('home');
+        }
+
+        function showMyTickets() {
+            showPage('mytickets');
+        }
+
+        function showTicketQR(ticketId) {
+            const ticket = getTickets().find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            const modalHTML = `
+                <div class="modal fade" id="qrModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">QR Code Tiket</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <h6>${ticket.eventTitle}</h6>
+                                <div id="ticketQR" class="my-4"></div>
+                                <p class="text-primary fw-bold">Tunjukkan QR ini di gate masuk</p>
+                                <p><small>No. Tiket: ${ticket.id}</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+            modal.show();
+
+            setTimeout(() => {
+                new QRCode(document.getElementById('ticketQR'), {
+                    text: ticket.qrCode,
+                    width: 200,
+                    height: 200
+                });
+            }, 100);
+
+            document.getElementById('qrModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function showTicketDetail(ticketId) {
+            showTicketQR(ticketId);
+        }
+
+        function renderProfilePage() {
+            const profile = getProfile();
+            
+            const html = `
+                <h2 class="mb-4">Profil Saya</h2>
+                <div class="card-custom p-4">
+                    <div class="text-center mb-4">
+                        <img src="${profile.avatar}" alt="Avatar" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; cursor: pointer;" onclick="openImageModal('${profile.avatar}', '${profile.name}')">
+                        <h3>${profile.name}</h3>
+                        <p class="text-muted">${profile.bio}</p>
+                    </div>
+                    
+                    <button class="btn-primary-custom" onclick="editProfile()">
+                        <i class="bi bi-pencil"></i> Edit Profil
+                    </button>
+                    
+                    <div class="mt-4">
+                        <h5 class="mb-3">Statistik</h5>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="card-custom p-3">
+                                    <h4 class="text-primary">${getTickets().length}</h4>
+                                    <small>Tiket</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="card-custom p-3">
+                                    <h4 class="text-primary">${getOrders().filter(o => o.status === 'success').length}</h4>
+                                    <small>Transaksi</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="card-custom p-3">
+                                    <h4 class="text-primary">${getEvents().length}</h4>
+                                    <small>Event</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('mainContainer').innerHTML = html;
+        }
+
+        function editProfile() {
+            const profile = getProfile();
+            
+            const modalHTML = `
+                <div class="modal fade" id="editProfileModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Profil</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">URL Avatar</label>
+                                    <input type="text" class="form-control" id="profileAvatar" value="${profile.avatar}" placeholder="https://...">
+                                    <small class="text-muted">Masukkan URL gambar atau gunakan https://via.placeholder.com/150</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Nama</label>
+                                    <input type="text" class="form-control" id="profileName" value="${profile.name}" placeholder="Nama lengkap">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Bio</label>
+                                    <textarea class="form-control" id="profileBio" rows="3" placeholder="Ceritakan tentang diri Anda">${profile.bio}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-primary" onclick="saveProfileEdit()">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+            modal.show();
+
+            document.getElementById('editProfileModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function saveProfileEdit() {
+            const profile = {
+                avatar: document.getElementById('profileAvatar').value || 'https://via.placeholder.com/150/3A7BCE/FFFFFF?text=USER',
+                name: document.getElementById('profileName').value || 'Pengguna BAMStix',
+                bio: document.getElementById('profileBio').value || 'Pecinta event dan hiburan'
+            };
+
+            saveProfile(profile);
+            bootstrap.Modal.getInstance(document.getElementById('editProfileModal')).hide();
+            showToast('Profil berhasil diupdate', 'success');
+            renderProfilePage();
+        }
+
+        function showProfile() {
+            showPage('profile');
+        }
+
+        function deleteTicket(ticketId) {
+            if (!confirm('Yakin ingin menghapus tiket ini?')) return;
+            
+            const tickets = getTickets().filter(t => t.id !== ticketId);
+            saveTickets(tickets);
+            showToast('Tiket berhasil dihapus', 'success');
+            renderHomePage();
+        }
+
+        function deleteTicketFromHistory(ticketId) {
+            if (!confirm('Yakin ingin menghapus tiket dari riwayat?')) return;
+            
+            const tickets = getTickets().filter(t => t.id !== ticketId);
+            saveTickets(tickets);
+            showToast('Tiket berhasil dihapus dari riwayat', 'success');
+            
+            // Re-render homepage
+            setTimeout(() => {
+                renderHomePage();
+            }, 500);
+        }
+
+        function validateTicket() {
+            const code = document.getElementById('ticketCode').value.trim();
+            if (!code) {
+                showToast('Masukkan kode tiket', 'error');
+                return;
+            }
+
+            const tickets = getTickets();
+            const ticket = tickets.find(t => t.qrCode === code);
+            const resultDiv = document.getElementById('scanResult');
+
+            if (!ticket) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        <strong>QR TIDAK TERDAFTAR</strong>
+                    </div>
+                `;
+                return;
+            }
+
+            if (ticket.status === 'used') {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>TIKET SUDAH DIGUNAKAN</strong>
+                    </div>
+                `;
+                return;
+            }
+
+            ticket.status = 'used';
+            saveTickets(tickets);
+
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>TIKET VALID</strong>
+                    <hr>
+                    <p class="mb-1"><strong>Event:</strong> ${ticket.eventTitle}</p>
+                    <p class="mb-1"><strong>Tanggal:</strong> ${formatDate(ticket.eventDate)}</p>
+                    <p class="mb-1"><strong>Jumlah:</strong> ${ticket.quantity} tiket</p>
+                    <p class="mb-0"><strong>No. Tiket:</strong> ${ticket.id}</p>
+                </div>
+            `;
+
+            showToast('Tiket berhasil divalidasi', 'success');
+        }
+
+        function showQRScanner() {
+            showPage('scanner');
+        }
+
+        function showCustomerSupport() {
+            const whatsappNumber = '6281234567890';
+            const message = 'Halo BAMStix, saya butuh bantuan...';
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function showAdminPanel() {
+            showPage('admin');
+        }
+
+        function showAddEventModal() {
+            const modalHTML = `
+                <div class="modal fade" id="addEventModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Tambah Event Baru</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" class="form-control mb-3" id="eventTitle" placeholder="Judul Event">
+                                <select class="form-select mb-3" id="eventCategory">
+                                    <option value="konser">Konser</option>
+                                    <option value="olahraga">Olahraga</option>
+                                    <option value="seminar">Seminar</option>
+                                    <option value="kesenian">Kesenian</option>
+                                </select>
+                                <input type="number" class="form-control mb-3" id="eventPrice" placeholder="Harga">
+                                <input type="date" class="form-control mb-3" id="eventDate">
+                                <input type="time" class="form-control mb-3" id="eventTime">
+                                <input type="text" class="form-control mb-3" id="eventLocation" placeholder="Lokasi">
+                                <textarea class="form-control mb-3" id="eventDescription" placeholder="Deskripsi" rows="3"></textarea>
+                                <input type="text" class="form-control mb-3" id="eventImage" placeholder="URL Gambar">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-primary" onclick="saveNewEvent()">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
+            modal.show();
+
+            document.getElementById('addEventModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function saveNewEvent() {
+            const newEvent = {
+                id: Date.now().toString(),
+                title: document.getElementById('eventTitle').value,
+                category: document.getElementById('eventCategory').value,
+                price: parseInt(document.getElementById('eventPrice').value),
+                date: document.getElementById('eventDate').value,
+                time: document.getElementById('eventTime').value,
+                location: document.getElementById('eventLocation').value,
+                description: document.getElementById('eventDescription').value,
+                image: document.getElementById('eventImage').value || 'https://via.placeholder.com/400x300/3A7BCE/FFFFFF?text=Event',
+                trending: false
+            };
+
+            const events = getEvents();
+            events.push(newEvent);
+            saveEvents(events);
+
+            bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
+            showToast('Event berhasil ditambahkan', 'success');
+            renderAdminPage();
+        }
+
+        function editEvent(eventId) {
+            const event = getEvents().find(e => e.id === eventId);
+            if (!event) return;
+
+            const modalHTML = `
+                <div class="modal fade" id="editEventModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Event</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" class="form-control mb-3" id="editTitle" value="${event.title}">
+                                <select class="form-select mb-3" id="editCategory">
+                                    <option value="konser" ${event.category === 'konser' ? 'selected' : ''}>Konser</option>
+                                    <option value="olahraga" ${event.category === 'olahraga' ? 'selected' : ''}>Olahraga</option>
+                                    <option value="seminar" ${event.category === 'seminar' ? 'selected' : ''}>Seminar</option>
+                                    <option value="kesenian" ${event.category === 'kesenian' ? 'selected' : ''}>Kesenian</option>
+                                </select>
+                                <input type="number" class="form-control mb-3" id="editPrice" value="${event.price}">
+                                <input type="date" class="form-control mb-3" id="editDate" value="${event.date}">
+                                <input type="time" class="form-control mb-3" id="editTime" value="${event.time}">
+                                <input type="text" class="form-control mb-3" id="editLocation" value="${event.location}">
+                                <textarea class="form-control mb-3" id="editDescription" rows="3">${event.description}</textarea>
+                                <input type="text" class="form-control mb-3" id="editImage" value="${event.image}">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-primary" onclick="saveEditEvent('${eventId}')">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('editEventModal'));
+            modal.show();
+
+            document.getElementById('editEventModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function saveEditEvent(eventId) {
+            const events = getEvents();
+            const event = events.find(e => e.id === eventId);
+
+            event.title = document.getElementById('editTitle').value;
+            event.category = document.getElementById('editCategory').value;
+            event.price = parseInt(document.getElementById('editPrice').value);
+            event.date = document.getElementById('editDate').value;
+            event.time = document.getElementById('editTime').value;
+            event.location = document.getElementById('editLocation').value;
+            event.description = document.getElementById('editDescription').value;
+            event.image = document.getElementById('editImage').value;
+
+            saveEvents(events);
+            bootstrap.Modal.getInstance(document.getElementById('editEventModal')).hide();
+            showToast('Event berhasil diupdate', 'success');
+            renderAdminPage();
+        }
+
+        function deleteEvent(eventId) {
+            if (!confirm('Yakin ingin menghapus event ini?')) return;
+
+            const events = getEvents().filter(e => e.id !== eventId);
+            saveEvents(events);
+            showToast('Event berhasil dihapus', 'success');
+            renderAdminPage();
+        }
+
+        function showSearchModal() {
+            const modalHTML = `
+                <div class="modal fade" id="searchModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Cari Event</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" class="form-control mb-3" id="searchInput" placeholder="Cari berdasarkan judul, kategori, atau lokasi..." oninput="performSearch()">
+                                <div id="searchResults"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('searchModal'));
+            modal.show();
+
+            document.getElementById('searchModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const events = getEvents();
+            const results = events.filter(e => 
+                e.title.toLowerCase().includes(query) ||
+                e.category.toLowerCase().includes(query) ||
+                e.location.toLowerCase().includes(query)
+            );
+
+            const resultsHTML = results.length > 0 ? results.map(event => `
+                <div class="card-custom mb-2" onclick="showEventDetail('${event.id}'); bootstrap.Modal.getInstance(document.getElementById('searchModal')).hide();" style="cursor: pointer;">
+                    <div class="row g-0 p-2">
+                        <div class="col-4">
+                            <img src="${event.image}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
+                        </div>
+                        <div class="col-8 ps-2">
+                            <h6 class="mb-1">${event.title}</h6>
+                            <small class="text-muted">${event.category}</small>
+                            <p class="mb-0 text-primary"><strong>${formatCurrency(event.price)}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            `).join('') : '<p class="text-center text-muted">Event tidak ditemukan</p>';
+
+            document.getElementById('searchResults').innerHTML = resultsHTML;
+        }
+
+        function searchFromSidebar() {
+            const query = document.getElementById('sidebarSearch').value.toLowerCase();
+            const events = getEvents();
+            const results = events.filter(e => 
+                e.title.toLowerCase().includes(query) ||
+                e.category.toLowerCase().includes(query) ||
+                e.location.toLowerCase().includes(query)
+            );
+
+            if (query && results.length > 0) {
+                // Show first result
+                showEventDetail(results[0].id);
+            }
+        }
+
+        // ===== PWA SERVICE WORKER =====
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register(createServiceWorker())
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+
+        function createServiceWorker() {
+            const swCode = `
+                self.addEventListener('install', (e) => {
+                    e.waitUntil(
+                        caches.open('bamstix-v1').then((cache) => {
+                            return cache.addAll([
+                                '/',
+                                '/index.html'
+                            ]);
+                        })
+                    );
+                });
+
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(
+                        caches.match(e.request).then((response) => {
+                            return response || fetch(e.request);
+                        })
+                    );
+                });
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            return URL.createObjectURL(blob);
+        }
+
+        // ===== MANIFEST =====
+        const manifest = {
+            name: 'BAMStix.id',
+            short_name: 'BAMStix',
+            description: 'Aplikasi Pemesanan Tiket Online',
+            start_url: '/',
+            display: 'standalone',
+            background_color: '#3A7BCE',
+            theme_color: '#3A7BCE',
+            icons: [
+                {
+                    src: 'https://via.placeholder.com/192x192/3A7BCE/FFFFFF?text=BS',
+                    sizes: '192x192',
+                    type: 'image/png'
+                },
+                {
+                    src: 'https://via.placeholder.com/512x512/3A7BCE/FFFFFF?text=BS',
+                    sizes: '512x512',
+                    type: 'image/png'
+                }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            initStorage();
+            
+            // Apply saved settings
+            const settings = getSettings();
+            if (settings.darkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').className = 'bi bi-sun-fill';
+            }
+
+            updateCartBadge();
+            showPage('home');
+        });
+
+        // Prevent form submission
+        document.addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
